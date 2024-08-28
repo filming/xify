@@ -2,6 +2,7 @@ import logging
 import os
 
 from .auth.xas import create_xas
+from .tweet.tweet import create_tweet
 
 
 class Xify:
@@ -41,3 +42,15 @@ class Xify:
         self.logger.info("Attempting to authorize XIFY instance with API keys.")
 
         self.xas, self.user_id, self.username, self.display_name = create_xas()
+
+    def create_tweet(self, message_content=None, media_ids=None, reply_ids=None):
+        self.logger.info(
+            "Attempting to send tweet. (messageContent: %s, mediaIds: %s, replyIds: %s)",
+            message_content,
+            media_ids,
+            reply_ids,
+        )
+
+        tweet_id = create_tweet(self.xas, message_content, media_ids, reply_ids)
+
+        return tweet_id
