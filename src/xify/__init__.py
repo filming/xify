@@ -3,6 +3,7 @@ import os
 
 from .auth.xas import create_xas
 from .tweet.tweet import create_tweet
+from .tweet.media import create_media_id
 
 
 class Xify:
@@ -42,6 +43,14 @@ class Xify:
         self.logger.info("Attempting to authorize XIFY instance with API keys.")
 
         self.xas, self.user_id, self.username, self.display_name = create_xas()
+
+    def create_media_id(self, filepath):
+        self.logger.info(
+            "Attempting to create media id for file stored at: %s", filepath
+        )
+        media_id = create_media_id(self.xas, filepath)
+
+        return media_id
 
     def create_tweet(self, message_content=None, media_ids=None, reply_ids=None):
         self.logger.info(
