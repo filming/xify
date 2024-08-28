@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_tweet(xas, message_content, media_ids, reply_ids):
-    """Create a tweet with possiblities of adding medias and replying to other tweets"""
+    """Create a tweet with possiblities of adding media and replying to other tweets."""
 
     # message_content is required if media_ids is not present.
     if (not message_content) and (not media_ids):
@@ -18,6 +18,9 @@ def create_tweet(xas, message_content, media_ids, reply_ids):
 
         if message_content:
             payload["text"] = message_content
+
+        if media_ids:
+            payload["media"] = {"media_ids": media_ids}
 
         # Send tweet
         headers = {"content-type": "application/json"}
