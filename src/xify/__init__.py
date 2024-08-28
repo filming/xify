@@ -1,11 +1,20 @@
 import logging
 import os
 
+from .auth.xas import create_xas
+
 
 class Xify:
     """A class that provides methods for interacting with the X API."""
 
     def __init__(self) -> None:
+        # Setup obj attributes
+        self.logger = None
+        self.xas = None
+        self.user_id = None
+        self.username = None
+        self.display_name = None
+
         # Make sure storage location exists before creating logging obj
         LOG_DIR_PATH = os.path.join("storage", "logs")
         LOG_PATH = os.path.join(LOG_DIR_PATH, "xify.log")
@@ -27,3 +36,8 @@ class Xify:
 
         self.logger = logger
         self.logger.info("Xify initialized successfully!")
+
+    def create_xas(self):
+        self.logger.info("Attempting to authorize XIFY instance with API keys.")
+
+        self.xas, self.user_id, self.username, self.display_name = create_xas()
