@@ -52,14 +52,14 @@ class Xify:
 
         return media_id
 
-    def create_tweet(self, message_content=None, media_ids=None, reply_ids=None):
+    def create_tweet(self, message_content=None, media_ids=None, reply_id=None):
         self.logger.info(
             "Attempting to send tweet. (messageContent: %s, mediaIds: %s, replyIds: %s)",
             message_content,
             media_ids,
-            reply_ids,
+            reply_id,
         )
 
-        tweet_id = create_tweet(self.xas, message_content, media_ids, reply_ids)
+        tweet_id = create_tweet(self.xas, message_content, media_ids, reply_id)
 
         return tweet_id
