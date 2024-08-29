@@ -9,6 +9,109 @@ logger = logging.getLogger(__name__)
 MAX_BYTES_PER_SEG = 5000000
 
 
+def upload_status(xas, media_id):
+    """Periodically poll for updates of a media processing operation."""
+
+    logger.info("Upload STATUS has started.")
+
+    params = {"command": "STATUS", "media_id": media_id}
+
+    is_finialized = False
+
+    while not is_finialized:
+        r = xas.get("https://upload.twitter.com/1.1/media/upload.json", params=params)
+
+        if 200 <= r.status_code <= 299:
+            resp = json.loads(r.text)
+
+            if resp["processing_info"]["state"] == "in_progress":
+                check_after_secs = resp["processing_info"]["check_after_secs"] + 1
+
+                logger.info(
+                    "The media processing operation associated with media ID: %s is still in progress. Checking again in %s second(s).",
+                    media_id,
+                    check_after_secs,
+                )
+
+                time.sleep(check_after_secs)
+
+            elif resp["processing_info"]["state"] == "succeeded":
+                logger.info(
+                    "The media processing operation associated with media ID: %s has finalized.",
+                    media_id,
+                )
+
+                is_finialized = True
+
+            elif resp["processing_info"]["state"] == "failed":
+                logger.critical(
+                    "Failed to find status on operation with media ID: %s. Reason: %s | %s",
+                    media_id,
+                    r.status_code,
+                    r.text,
+                )
+
+                break
+
+        else:
+            logger.critical(
+                "Failed to find status on operation with media ID: %s. Reason: %s | %s",
+                media_id,
+                r.status_code,
+                r.text,
+            )
+
+            break
+
+
+def upload_finalize(xas, media_id):
+    """Finalize the flow of uploading media to X."""
+
+    logger.info("Upload FINALIZE has started.")
+
+    params = {"command": "FINALIZE", "media_id": media_id}
+
+    r = xas.post("https://upload.twitter.com/1.1/media/upload.json", params=params)
+
+    if 200 <= r.status_code <= 299:
+        resp = json.loads(r.text)
+
+        if "processing_info" in resp:
+
+            if resp["processing_info"]["state"] == "pending":
+                check_after_secs = resp["processing_info"]["check_after_secs"] + 1
+
+                logger.info(
+                    "The media processing operation with media ID: %s is not finalized yet. Checking again in %s second(s).",
+                    media_id,
+                    check_after_secs,
+                )
+
+                time.sleep(check_after_secs)
+
+                upload_status(xas, media_id)
+
+            elif resp["processing_info"]["state"] == "succeeded":
+                logger.info(
+                    "The media processing operation associated with media ID: %s has finalized.",
+                    media_id,
+                )
+
+        else:
+            logger.info(
+                "The media processing operation associated with media ID: %s has finalized.",
+                media_id,
+            )
+
+    else:
+        logger.critical(
+            "The media processing operation associated with media ID: %s could not be finalized. Reason: %s | %s",
+            media_id,
+            r.status_code,
+            r.text,
+        )
+
+
 def upload_append(xas, filepath, media_id):
     """Upload a chunk of the media file.
 
@@ -99,7 +202,7 @@ def get_media_attributes(filepath):
     if filepath_parts[-1] == "png":
         return "tweet_image", "image/png"
 
-    elif filepath_parts[-1] == "jpeg":
+    elif filepath_parts[-1] in ("jpeg", "jpg"):
         return "tweet_image", "image/jpeg"
 
     elif filepath_parts[-1] == "gif":
@@ -145,5 +248,6 @@ def create_media_id(xas, filepath):
 
     media_id = upload_init(xas, filepath)
     upload_append(xas, filepath, media_id)
+    upload_finalize(xas, media_id)
 
     return media_id
