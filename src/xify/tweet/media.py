@@ -1,15 +1,19 @@
+import requests
+
 import logging
 import json
 import os
 import math
 import time
+from typing import Tuple, Union
+
 
 logger = logging.getLogger(__name__)
 
 MAX_BYTES_PER_SEG = 5000000
 
 
-def upload_status(xas, media_id):
+def upload_status(xas: requests.Session, media_id: str) -> None:
     """Periodically poll for updates of a media processing operation."""
 
     logger.info("Upload STATUS has started.")
@@ -64,7 +68,7 @@ def upload_status(xas, media_id):
             break
 
 
-def upload_finalize(xas, media_id):
+def upload_finalize(xas: requests.Session, media_id: str) -> None:
     """Finalize the flow of uploading media to X."""
 
     logger.info("Upload FINALIZE has started.")
@@ -112,7 +116,7 @@ def upload_finalize(xas, media_id):
         )
 
 
-def upload_append(xas, filepath, media_id):
+def upload_append(xas: requests.Session, filepath: str, media_id: str) -> None:
     """Upload a chunk of the media file.
 
     The APPEND command is used to upload a chunk (consecutive byte range) of the media file.
@@ -194,7 +198,7 @@ def upload_append(xas, filepath, media_id):
         time.sleep(2)
 
 
-def get_media_attributes(filepath):
+def get_media_attributes(filepath: str) -> Tuple[str, str]:
     """Get the MIME type and category of a file."""
 
     filepath_parts = filepath.split(".")
@@ -212,7 +216,7 @@ def get_media_attributes(filepath):
         return "tweet_video", "video/mp4"
 
 
-def upload_init(xas, filepath):
+def upload_init(xas: requests.Session, filepath: str) -> Union[str, None]:
     """Create a request to initiate a file upload session."""
 
     logger.info("Upload INIT request has started.")
@@ -243,7 +247,7 @@ def upload_init(xas, filepath):
         logger.critical("Upload INIT failed. Reason: %s | %s", r.status_code, r.text)
 
 
-def create_media_id(xas, filepath):
+def create_media_id(xas: requests.Session, filepath: str) -> str:
     """Handle the flow of obtaining a media id."""
 
     media_id = upload_init(xas, filepath)

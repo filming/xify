@@ -5,14 +5,16 @@ from requests_oauthlib import OAuth1
 import logging
 import os
 import json
+from typing import Union, Tuple
 
 load_dotenv()
-
 
 logger = logging.getLogger(__name__)
 
 
-def create_xas():
+def create_xas() -> (
+    Union[Tuple[requests.Session, str, str, str], Tuple[None, None, None, None]]
+):
     """Create an X authorized session object."""
 
     # Make sure ENV variables exist
@@ -68,3 +70,5 @@ def create_xas():
         logger.critical(
             "Failed to authenticate. Reason: %s | %s", r.status_code, r.text
         )
+
+        return None, None, None, None

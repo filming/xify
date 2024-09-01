@@ -3,6 +3,7 @@ import os
 from logging.handlers import TimedRotatingFileHandler
 import zipfile
 from os.path import basename
+from typing import List, Union
 
 from .auth.xas import create_xas
 from .tweet.tweet import create_tweet
@@ -70,12 +71,12 @@ class Xify:
 
         return logger
 
-    def create_xas(self):
+    def create_xas(self) -> None:
         self.logger.info("Attempting to authorize XIFY instance with API keys.")
 
         self.xas, self.user_id, self.username, self.display_name = create_xas()
 
-    def create_media_id(self, filepath):
+    def create_media_id(self, filepath: str) -> Union[str, None]:
         self.logger.info(
             "Attempting to create media id for file stored at: %s", filepath
         )
@@ -83,7 +84,12 @@ class Xify:
 
         return media_id
 
-    def create_tweet(self, message_content=None, media_ids=None, reply_id=None):
+    def create_tweet(
+        self,
+        message_content: str = None,
+        media_ids: List[str] = None,
+        reply_id: str = None,
+    ) -> Union[str, None]:
         self.logger.info(
             "Attempting to send tweet. (messageContent: %s, mediaIds: %s, replyIds: %s)",
             message_content,

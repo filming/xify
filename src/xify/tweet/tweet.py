@@ -1,10 +1,18 @@
+import requests
+
 import logging
 import json
+from typing import Union, List
 
 logger = logging.getLogger(__name__)
 
 
-def create_tweet(xas, message_content, media_ids, reply_id):
+def create_tweet(
+    xas: requests.Session,
+    message_content: Union[str, None],
+    media_ids: Union[List[str], None],
+    reply_id: Union[str, None],
+) -> Union[str, None]:
     """Create a tweet with possiblities of adding media and replying to other tweets."""
 
     # message_content is required if media_ids is not present.
