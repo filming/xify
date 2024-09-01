@@ -1,5 +1,8 @@
 import logging
 import os
+from logging.handlers import TimedRotatingFileHandler
+import zipfile
+from os.path import basename
 
 from .auth.xas import create_xas
 from .tweet.tweet import create_tweet
@@ -10,34 +13,62 @@ class Xify:
     """A class that provides methods for interacting with the X API."""
 
     def __init__(self) -> None:
-        # Setup obj attributes
-        self.logger = None
+        self.logger = self.setup_logger()
         self.xas = None
         self.user_id = None
         self.username = None
         self.display_name = None
 
-        # Make sure storage location exists before creating logging obj
-        LOG_DIR_PATH = os.path.join("storage", "logs")
-        LOG_PATH = os.path.join(LOG_DIR_PATH, "xify.log")
+        self.logger.info("An instance of XIFY has been created.")
+
+    def setup_logger(self) -> logging.Logger:
+        """Create a TimedRotatingFileHandler that rotates at midnight and formats filenames dynamically."""
+
+        # Make sure storage location for logger exists before creating logging obj
+        LOG_DIR_PATH = os.path.join("storage", "logs", "xify")
+        LOG_PATH = os.path.join(LOG_DIR_PATH, "current.log")
         os.makedirs(LOG_DIR_PATH, exist_ok=True)
 
-        # Setup a logger for this xify object
-        logger = logging.getLogger(__name__)  # Get a logger with the class name
-        logger.setLevel(logging.INFO)
-
+        # Configure formatter
         formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            "[ %(asctime)s ] [ %(levelname)-8s] [ %(filename)-24s ] [ %(funcName)-24s ] :: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-        handler = logging.FileHandler(LOG_PATH, "w")
+        # Configure handler
+        def rotator(source, dest):
+            # Rotated log file is zipped and the original log file will be deleted
+            zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED).write(
+                source, os.path.basename(source)
+            )
+            os.remove(source)
+
+        handler = TimedRotatingFileHandler(
+            LOG_PATH,
+            when="midnight",
+            backupCount=365,
+        )
+        """
+		default name for a log file that is being rotated (handler.namer lambda callable receives this):
+		"current.log.2024-07-19"
+
+		custom name for log file that is being rotated (lambda callable of handler.namer sets this):
+		"2024-07-18.zip"
+		"""
+        handler.namer = lambda name: (
+            os.path.join(LOG_DIR_PATH, f"{os.path.splitext(name)[1][1:]}.zip")
+            if name.count(".") > 1
+            else name
+        )
+        handler.rotator = rotator
         handler.setFormatter(formatter)
 
+        # Configure logger
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
         logger.addHandler(handler)
 
-        self.logger = logger
-        self.logger.info("Xify initialized successfully!")
+        return logger
 
     def create_xas(self):
         self.logger.info("Attempting to authorize XIFY instance with API keys.")
