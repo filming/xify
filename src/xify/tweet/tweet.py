@@ -52,3 +52,18 @@ def create_tweet(
             logger.critical(
                 "Failed to send tweet. Reason: %s | %s", r.status_code, r.text
             )
+
+
+def delete_tweet(xas: requests.Session, tweet_id: str) -> None:
+    """Delete a tweet."""
+
+    r = xas.delete(f"https://api.twitter.com/2/tweets/{tweet_id}")
+    resp = json.loads(r.text)
+
+    if resp["data"]["deleted"]:
+        logger.info("Tweet has been successfully deleted!")
+
+    else:
+        logger.critical(
+            "Tweet could not been deleted! Reason: %s | %s", r.status_code, r.text
+        )

@@ -6,7 +6,7 @@ from os.path import basename
 from typing import List, Union
 
 from .auth.xas import create_xas
-from .tweet.tweet import create_tweet
+from .tweet.tweet import create_tweet, delete_tweet
 from .tweet.media import create_media_id
 
 
@@ -100,3 +100,6 @@ class Xify:
         tweet_id = create_tweet(self.xas, message_content, media_ids, reply_id)
 
         return tweet_id
+
+    def delete_tweet(self, tweet_id: str) -> None:
+        delete_tweet(self.xas, tweet_id)
